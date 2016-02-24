@@ -150,8 +150,8 @@ EOS
           @choco_exe ||=
               # if this check is in #define_resource_requirements, it won't get
               # run before choco.exe gets called from #load_current_resource.
-              exe_path = ::File.join(choco_install_path, "bin", "choco.exe")
-              if !::File.exists?(exe_path.to_s)
+              exe_path = ::File.join(choco_install_path.to_s, "bin", "choco.exe")
+              if !::File.exist?(exe_path)
                 raise Chef::Exceptions::MissingLibrary, CHOCO_MISSING_MSG
               else
                 exe_path
