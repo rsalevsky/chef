@@ -43,6 +43,7 @@ class Chef
         @relative_path = /#{Regexp.escape(@cookbook_path)}\/(.+)$/
         @metadata_loaded = false
         @cookbook_settings = {
+          :all_unignored_files  => {},
           :attribute_filenames  => {},
           :definition_filenames => {},
           :recipe_filenames     => {},
@@ -77,6 +78,14 @@ class Chef
 
         # re-raise any exception that occurred when reading the metadata
         raise_metadata_error!
+
+        load_as(:all_unignored_files, "**/*")
+
+        # TODO:
+        # 1. Can we safely pick out the segment files with fnmatch against the
+        #    file names in all_unignored_files (?)
+        # 2. If so, can we avoid running chefignore twice by running it against
+        #    all_unignored_files before segmenting?
 
         load_as(:attribute_filenames, "attributes", "*.rb")
         load_as(:definition_filenames, "definitions", "*.rb")
@@ -121,6 +130,7 @@ class Chef
         return nil if empty?
 
         Chef::CookbookVersion.new(cookbook_name, *cookbook_paths).tap do |c|
+          c.all_unignored_files  = cookbook_settings[:all_unignored_files].values
           c.attribute_filenames  = cookbook_settings[:attribute_filenames].values
           c.definition_filenames = cookbook_settings[:definition_filenames].values
           c.recipe_filenames     = cookbook_settings[:recipe_filenames].values
