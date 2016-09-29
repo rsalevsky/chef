@@ -303,7 +303,7 @@ class Chef
     # gpg signature checking. This will be default in the
     # future. Setting to false disables the warnings.
     # Leaving this set to nil or false is a security hazard!
-    zypper_check_gpg nil
+    zypper_check_gpg true
 
     # Report Handlers
     report_handlers []
