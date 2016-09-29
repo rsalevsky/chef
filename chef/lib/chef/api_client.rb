@@ -249,11 +249,17 @@ class Chef
       end
       # First, try and create a new registration
       begin
-        r.post_rest("clients", {:name => self.name, :admin => self.admin })
+        client = {:name => self.name, :admin => self.admin }
+        client[:public_key] = self.public_key if self.public_key
+        r.post_rest("clients", client)
       rescue Net::HTTPServerException => e
         # If that fails, go ahead and try and update it
         if e.response.code == "409"
-          r.put_rest("clients/#{name}", { :name => self.name, :admin => self.admin, :private_key => new_key })
+          if self.public_key
+            r.put_rest("clients/#{name}", { :name => self.name, :admin => self.admin, :public_key => self.public_key })
+          else
+            r.put_rest("clients/#{name}", { :name => self.name, :admin => self.admin, :private_key => new_key })
+          end
         else
           raise e
         end
