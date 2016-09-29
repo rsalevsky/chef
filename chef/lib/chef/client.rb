@@ -41,6 +41,7 @@ require 'chef/formatters/doc'
 require 'chef/formatters/minimal'
 require 'chef/version'
 require 'chef/resource_reporter'
+require 'chef/run_lock'
 require 'ohai'
 require 'rbconfig'
 
@@ -385,7 +386,7 @@ class Chef
       runner.converge
       @events.converge_complete
       true
-    rescue Exception => e
+    rescue Exception
       # TODO: should this be a separate #converge_failed(exception) method?
       @events.converge_complete
       raise
@@ -404,8 +405,10 @@ class Chef
     # === Returns
     # true:: Always returns true.
     def do_run
-      run_context = nil
+      runlock = RunLock.new(Chef::Config)
+      runlock.acquire
 
+      run_context = nil
       @events.run_start(Chef::VERSION)
       Chef::Log.info("*** Chef #{Chef::VERSION} ***")
       enforce_path_sanity
@@ -445,8 +448,9 @@ class Chef
         @events.run_failed(e)
         raise
       ensure
-        run_status = nil
+        @run_status = nil
         run_context = nil
+        runlock.release
         GC.start
       end
       true
