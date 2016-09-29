@@ -158,9 +158,33 @@ class Chef
           },
           :suse     => {
             :default => {
-              :service => Chef::Provider::Service::Redhat,
+              :service => Chef::Provider::Service::Systemd,
               :cron => Chef::Provider::Cron,
               :package => Chef::Provider::Package::Zypper,
+              :group => Chef::Provider::Group::Gpasswd
+            },
+            "11.0" => {
+              :service => Chef::Provider::Service::Redhat,
+              :group => Chef::Provider::Group::Suse
+            },
+            "11.1" => {
+              :service => Chef::Provider::Service::Redhat,
+              :group => Chef::Provider::Group::Suse
+            },
+            "11.2" => {
+              :service => Chef::Provider::Service::Redhat,
+              :group => Chef::Provider::Group::Suse
+            },
+            "11.3" => {
+              :service => Chef::Provider::Service::Redhat,
+              :group => Chef::Provider::Group::Suse
+            },
+            "11.4" => {
+              :service => Chef::Provider::Service::Redhat,
+              :group => Chef::Provider::Group::Suse
+            },
+            "11.5" => {
+              :service => Chef::Provider::Service::Redhat,
               :group => Chef::Provider::Group::Suse
             }
           },
