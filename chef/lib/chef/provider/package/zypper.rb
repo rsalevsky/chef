@@ -41,7 +41,7 @@ class Chef
           version=''
           oud_version=''
           Chef::Log.debug("#{@new_resource} checking zypper")
-          status = popen4("rpm -q --qf 'Rpm: %{VERSION}-%{RELEASE}\n' #{@new_resource.package_name} || zypper -n info #{@new_resource.package_name}") do |pid, stdin, stdout, stderr|
+          status = popen4("rpm -q --qf 'Rpm: %{VERSION}-%{RELEASE}\n' #{@new_resource.package_name} || zypper-retry -n info #{@new_resource.package_name}") do |pid, stdin, stdout, stderr|
             stdout.each do |line|
               case line
               when /^Version: (.+)$/
@@ -116,9 +116,9 @@ class Chef
           version = "=#{version}" unless version.empty?
 
           if zypper_version < 1.0
-            shell_out!("zypper#{gpg_checks} #{command} -y #{pkgname}")
+            shell_out!("zypper-retry#{gpg_checks} #{command} -y #{pkgname}")
           else
-            shell_out!("zypper --non-interactive#{gpg_checks} " +
+            shell_out!("zypper-retry --non-interactive#{gpg_checks} " +
               "#{command} #{pkgname}#{version}")
           end
         end
