@@ -83,7 +83,7 @@ class Chef
             end
           end
 
-          unless status.exitstatus == 0
+          unless [0, 106].include?(status.exitstatus)
             raise Chef::Exceptions::Package, "zypper failed - #{status.inspect}!"
           end
           
@@ -115,11 +115,17 @@ class Chef
         def zypper_package(command, pkgname, version)
           version = "=#{version}" unless version.empty?
 
-          if zypper_version < 1.0
-            shell_out!("zypper-retry#{gpg_checks} #{command} -y #{pkgname}")
-          else
-            shell_out!("zypper-retry --non-interactive#{gpg_checks} " +
-              "#{command} #{pkgname}#{version}")
+          begin
+            if zypper_version < 1.0
+              shell_out!("zypper-retry#{gpg_checks} #{command} -y #{pkgname}")
+            else
+              shell_out!("zypper-retry --non-interactive#{gpg_checks} " +
+                "#{command} #{pkgname}#{version}")
+            end
+          rescue Mixlib::ShellOut::ShellCommandFailed => e
+            unless e.message.include?("received '106'")
+              raise e
+            end
           end
         end
 
