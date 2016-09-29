@@ -199,6 +199,23 @@ class Chef::Application::Client < Chef::Application
       Chef::Config[:exception_handlers] << Chef::Handler::ErrorReport.new
     end
 
+    #################################################################
+    # SUSE-specific patch to allow "pausing" of intervallic
+    # chef-client runs.  This is currently necessary to prevent the
+    # daemon from interfering with Crowbar's orchestration workflow:
+    #
+    #   https://bugzilla.suse.com/show_bug.cgi?id=857375
+    #
+    # This mechanism replaces another attempt to prevent the
+    # interference which resulted in bad things happening:
+    #
+    #   https://bugzilla.suse.com/show_bug.cgi?id=936302
+    unless config.has_key? :pause_file
+      Chef::Config[:pause_file] = \
+        "#{Chef::Config[:file_cache_path]}/pause-file.lock"
+    end
+    #################################################################
+
     if Chef::Config[:daemonize]
       Chef::Config[:interval] ||= 1800
     end
@@ -282,7 +299,12 @@ class Chef::Application::Client < Chef::Application
           Chef::Log.debug("Splay sleep #{splay} seconds")
           sleep splay
         end
-        run_chef_client
+        pause_file = Chef::Config[:pause_file]
+        if Chef::Config[:interval] && pause_file && File.exists?(pause_file)
+          Chef::Log.info("Skipping intervallic run since #{pause_file} exists")
+        else
+          run_chef_client
+        end
         if Chef::Config[:interval]
           Chef::Log.debug("Sleeping for #{Chef::Config[:interval]} seconds")
           unless SELF_PIPE.empty?
