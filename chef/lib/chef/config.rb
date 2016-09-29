@@ -323,7 +323,7 @@ class Chef
     cache_options({ :path => platform_specific_path("/var/chef/cache/checksums"), :skip_expires => true })
 
     # Set to false to silence Chef 11 deprecation warnings:
-    chef11_deprecation_warnings true
+    chef11_deprecation_warnings false
 
     # Arbitrary knife configuration data
     knife Hash.new
