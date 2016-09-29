@@ -35,7 +35,7 @@ class Chef
 
         def commit(sandbox_file)
           FileUtils.mkdir_p(checksum_repo_directory)
-          File.rename(sandbox_file, file_location)
+          FileUtils.mv(sandbox_file, file_location)
         end
 
         def revert(original_committed_file_location)
