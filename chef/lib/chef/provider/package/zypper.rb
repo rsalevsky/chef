@@ -41,7 +41,7 @@ class Chef
           version=''
           oud_version=''
           Chef::Log.debug("#{@new_resource} checking zypper")
-          status = popen4("zypper -n info #{@new_resource.package_name}") do |pid, stdin, stdout, stderr|
+          status = popen4("rpm -q --qf 'Rpm: %{VERSION}-%{RELEASE}\n' #{@new_resource.package_name} || zypper -n info #{@new_resource.package_name}") do |pid, stdin, stdout, stderr|
             stdout.each do |line|
               case line
               when /^Version: (.+)$/
@@ -58,6 +58,12 @@ class Chef
                 is_out_of_date=true
                 oud_version=$1
                 Chef::Log.debug("#{@new_resource} out of date version #{$1}")
+              when /^Rpm: (.*)$/
+                is_installed=true
+                is_out_of_date=true # actually we don't know
+                version=nil
+                oud_version=$1
+                Chef::Log.debug("#{@new_resource} version #{$1} is installed, says rpm")
               end
             end
           end
