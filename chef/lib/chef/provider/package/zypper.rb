@@ -83,65 +83,40 @@ class Chef
           
           @current_resource
         end
-        
-        #Gets the zypper Version from command output (Returns Floating Point number)
+
         def zypper_version()
           `zypper -V 2>&1`.scan(/\d+/).join(".").to_f
         end
 
         def install_package(name, version)
-          if zypper_version < 1.0
-            run_command(
-              :command => "zypper install -y #{name}"
-            )
-          elsif version
-            run_command(
-              :command => "zypper -n#{gpg_checks} install -l #{name}=#{version}"
-            )
-          else
-            run_command(
-              :command => "zypper -n#{gpg_checks} install -l #{name}"
-            )
-          end
+          zypper_package("install --auto-agree-with-licenses", name, version)
         end
 
         def upgrade_package(name, version)
-          if zypper_version < 1.0
-            run_command(
-              :command => "zypper install -y #{name}"
-            )
-          elsif version
-            run_command(
-              :command => "zypper -n#{gpg_checks} install -l #{name}=#{version}"
-            )
-          else
-            run_command(
-              :command => "zypper -n#{gpg_checks} install -l #{name}"
-            )
-          end
+          install_package(name, version)
         end
 
         def remove_package(name, version)
-          if zypper_version < 1.0
-            run_command(
-              :command => "zypper remove -y #{name}"
-            )
-          elsif version
-            run_command(
-              :command => "zypper -n#{gpg_checks} remove #{name}=#{version}"
-            )
-          else
-            run_command(
-              :command => "zypper -n#{gpg_checks} remove #{name}"
-            )
-          end
+          zypper_package("remove", name, version)
         end
       
         def purge_package(name, version)
-          remove_package(name, version)
+          zypper_package("remove --clean-deps", name, version)
         end
 
         private
+
+        def zypper_package(command, pkgname, version)
+          version = "=#{version}" unless version.empty?
+
+          if zypper_version < 1.0
+            shell_out!("zypper#{gpg_checks} #{command} -y #{pkgname}")
+          else
+            shell_out!("zypper --non-interactive#{gpg_checks} " +
+              "#{command} #{pkgname}#{version}")
+          end
+        end
+
         def gpg_checks()
           case Chef::Config[:zypper_check_gpg]
           when true
@@ -152,6 +127,7 @@ class Chef
             Chef::Log.warn("Chef::Config[:zypper_check_gpg] was not set. " +
               "All packages will be installed without gpg signature checks. " +
               "This is a security hazard.")
+
             " --no-gpg-checks"
           end
         end
