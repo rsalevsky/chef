@@ -104,17 +104,23 @@ class Chef
 
         contents.each do |line|
           if line.match(exp)
-            self.file_edited = true
             case
             when command == 'r'
-              new_contents << ((method == 1) ? replace : line.gsub!(exp, replace))
+              new_line = ((method == 1) ? replace : line.gsub!(exp, replace))
+              new_contents << new_line
+              self.file_edited = file_edited || (line.chomp != new_line)
             when command == 'd'
               if method == 2
-                new_contents << line.gsub!(exp, "")
+                new_line = line.gsub!(exp, "")
+                new_contents << new_line
+                self.file_edited = file_edited || (line.chomp != new_line)
+              else
+                self.file_edited = true
               end
             when command == 'i'
               new_contents << line
               new_contents << replace unless method == 2
+              self.file_edited = true
             end
           else
             new_contents << line
