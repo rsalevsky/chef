@@ -1,14 +1,17 @@
+# -*- coding: utf-8 -*-
 #
-# Author:: Adam Jacob (<adam@opscode.com>)
+# Authors:: Adam Jacob (<adam@opscode.com>)
+#           Ionuț Arțăriși (<iartarisi@suse.cz>)
 # Copyright:: Copyright (c) 2008 Opscode, Inc.
+#             Copyright (c) 2013 SUSE Linux GmbH
 # License:: Apache License, Version 2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,14 +22,16 @@
 require 'chef/provider/package'
 require 'chef/mixin/command'
 require 'chef/resource/package'
+require 'chef/mixin/shell_out'
 require 'singleton'
 
 class Chef
   class Provider
     class Package
-      class Zypper < Chef::Provider::Package  
-      
- 
+      class Zypper < Chef::Provider::Package
+
+        include Chef::Mixin::ShellOut
+
         def load_current_resource
           @current_resource = Chef::Resource::Package.new(@new_resource.name)
           @current_resource.package_name(@new_resource.package_name)
@@ -45,7 +50,7 @@ class Chef
               when /^Installed: Yes$/
                 is_installed=true
                 Chef::Log.debug("#{@new_resource} is installed")
-                
+
               when /^Installed: No$/
                 is_installed=false
                 Chef::Log.debug("#{@new_resource} is not installed")
@@ -61,12 +66,12 @@ class Chef
             @candidate_version=version
             @current_resource.version(nil)
           end
- 
+
           if is_installed==true
             if is_out_of_date==true
               @current_resource.version(oud_version)
               @candidate_version=version
-            else 
+            else
               @current_resource.version(version)
               @candidate_version=version
             end
@@ -144,8 +149,8 @@ class Chef
           when false
             " --no-gpg-checks"
           when nil
-            Chef::Log.warn("Chef::Config[:zypper_check_gpg] was not set. " + 
-              "All packages will be installed without gpg signature checks. " + 
+            Chef::Log.warn("Chef::Config[:zypper_check_gpg] was not set. " +
+              "All packages will be installed without gpg signature checks. " +
               "This is a security hazard.")
             " --no-gpg-checks"
           end
